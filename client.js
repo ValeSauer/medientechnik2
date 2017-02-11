@@ -5,18 +5,24 @@
 
 var app = {
     location: "",
-    playlists: []
+    playlists: [],
+    currentPlaylist: null,
+    currentSegment: null,
+    cache: []
 }
 
 var button_load = $("#button_load");
 var playlist_master = $("#playlist_master");
 var select_playlist = $("#playlists");
 var select_segment = $("#segments");
-var player = $("#player");
+var player = $("#player")[0];
 
-
-function parse_master(url, lines) {
-    // masterplaylist
+/**
+ * Parse a master playlist
+ * @param url
+ * @param lines
+ */
+function parseMaster(url, lines) {
     console.log("Parsing masterplaylist " + url);
 
     var playlist = {
@@ -44,14 +50,17 @@ function parse_master(url, lines) {
             playlist.url = getPath(url) + varianturl;
             app.playlists.push(playlist);
             $("#playlists").append("<option value='" + playlist.url + "'>" + varianturl + " | " + "Bandwidth: " + playlist.bandwidth + "</option>");
-            load_playlist(playlist.url, parse_variant);
-            playPlaylist(url);
+            loadPlaylist(playlist.url, parseVariant);
         }
     });
 }
 
-function parse_variant(url, lines) {
-    // variantplaylist
+/**
+ * Parse a variant stream Playlist
+ * @param url
+ * @param lines
+ */
+function parseVariant(url, lines) {
     console.log("Parsing variantplaylist " + url);
     var currentTime = 0;
 
@@ -62,8 +71,8 @@ function parse_variant(url, lines) {
                 var line = this.valueOf();
                 if (line.indexOf("#EXTINF") != -1) {
                     duration = line.substr(8);
-                    if(duration.substr(-1) == ","){
-                        duration = duration.substr(0, duration.length -1);
+                    if (duration.substr(-1) == ",") {
+                        duration = duration.substr(0, duration.length - 1);
                     }
                 } else if (line.indexOf(".mp4") != -1) {
                     var segment = {
@@ -80,9 +89,10 @@ function parse_variant(url, lines) {
             });
         }
     }
+    playPlaylist(app.playlists.length - 1);
 }
 
-function load_playlist(url, callback) {
+function loadPlaylist(url, callback) {
 
     console.log("Fetching playlist: " + url);
 
@@ -94,13 +104,13 @@ function load_playlist(url, callback) {
         } else {
             if (data.indexOf("#EXT-X-STREAM-INF") != -1) {
                 // MASTER
+                app.location = playlist_master.val();
                 callback(url, lines);
             } else if (data.indexOf("#EXTINF")) {
                 // VARIANT
                 callback(url, lines, 1);
             }
         }
-
     })
         .fail(function () {
             console.log("error");
@@ -117,16 +127,63 @@ function getPath(url) {
     return path;
 }
 
-function playPlaylist(url) {
-    player[0].src = url;
-    player[0].load();
-    player[0].play();
-    console.log("Playing " + player[0].currentSrc);
+function playPlaylist(id) {
+    app.currentPlaylist = id;
+    enqueueSegment(0);
+    try {
+        enqueueSegment(0);
+    } catch (e) {
+        console.log(e);
+    }
 }
 
-function setCurrentTime(time){
+function enqueueSegment(id) {
+    preloadSegment(id, playSegment);
+}
+
+function setCurrentTime(time) {
     player[0].currentTime = time;
     player[0].play();
+}
+
+function getSegmentUrl(id){
+    if(!app.playlists[app.currentPlaylist]){
+        console.log("Playlist does not exist");
+    }
+    if(!app.playlists[app.currentPlaylist].segments[id]){
+        console.log("Segment does not exist");
+    }
+    return app.playlists[app.currentPlaylist].segments[id].url;
+}
+
+function preloadSegment(id, callback) {
+    var url = getSegmentUrl(id);
+    if (app.cache[url]) {
+        callback(app.cache[url]);
+    }
+    var req = new XMLHttpRequest();
+    req.open('GET', url, true);
+    req.responseType = 'blob';
+    req.onload = function () {
+        if (this.status === 200) {
+            var Blob = this.response;
+            var bloburl = URL.createObjectURL(Blob);
+            app.cache[url] = bloburl;
+            callback(id);
+        }
+    }
+    req.onerror = function () {
+        // Error
+    }
+    req.send();
+}
+
+function playSegment(id) {
+    var url = getSegmentUrl(id);
+    app.currentSegment = id;
+    player.src = app.cache[url];
+    player.load();
+    player.play();
 }
 
 select_playlist.on('change', function () {
@@ -138,8 +195,7 @@ select_segment.on('change', function () {
 });
 
 button_load.click(function () {
-    app.location = playlist_master.val();
-    load_playlist(playlist_master.val(), parse_master);
+    loadPlaylist(playlist_master.val(), parseMaster);
 });
 //})
 //();
