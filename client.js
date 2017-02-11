@@ -65,7 +65,7 @@ function parse_variant(url, lines) {
                     if(duration.substr(-1) == ","){
                         duration = duration.substr(0, duration.length -1);
                     }
-                } else if (line.indexOf(".ts") != -1) {
+                } else if (line.indexOf(".mp4") != -1) {
                     var segment = {
                         duration: parseFloat(duration),
                         currentTime: parseFloat(currentTime),
