@@ -25,6 +25,9 @@ var player = $("#player")[0];
 function parseMaster(url, lines) {
     console.log("Parsing masterplaylist " + url);
 
+    app.currentPlaylist = null;
+    app.currentSegment = null;
+
     var playlist = {
         bandwidth: "",
         url: "",
@@ -84,12 +87,16 @@ function parseVariant(url, lines) {
                     if (i == 0) {
                         $("#segments").append("<option value='" + currentTime + "'>" + line + " | " + "Duration: " + parseFloat(duration) + "</option>");
                     }
+                    if(app.currentSegment === null && app.currentPlaylist === null){
+                        app.currentPlaylist = 0;
+                        app.currentSegment = 0;
+                        playPlaylist(0);
+                    }
                     currentTime += parseFloat(duration);
                 }
             });
         }
     }
-    playPlaylist(app.playlists.length - 1);
 }
 
 function loadPlaylist(url, callback) {
@@ -128,17 +135,9 @@ function getPath(url) {
 }
 
 function playPlaylist(id) {
+    console.log("Playing playlist " + id);
     app.currentPlaylist = id;
-    enqueueSegment(0);
-    try {
-        enqueueSegment(0);
-    } catch (e) {
-        console.log(e);
-    }
-}
-
-function enqueueSegment(id) {
-    preloadSegment(id, playSegment);
+    preloadSegment(id, true);
 }
 
 function setCurrentTime(time) {
@@ -156,7 +155,8 @@ function getSegmentUrl(id){
     return app.playlists[app.currentPlaylist].segments[id].url;
 }
 
-function preloadSegment(id, callback) {
+function preloadSegment(id, forceplay) {
+    console.log("Preloading Segment " + id);
     var url = getSegmentUrl(id);
     if (app.cache[url]) {
         callback(app.cache[url]);
@@ -169,7 +169,10 @@ function preloadSegment(id, callback) {
             var Blob = this.response;
             var bloburl = URL.createObjectURL(Blob);
             app.cache[url] = bloburl;
-            callback(id);
+            if(player.ended || forceplay){
+                console.log("I was forced to play");
+                playSegment(id);
+            }
         }
     }
     req.onerror = function () {
@@ -179,15 +182,35 @@ function preloadSegment(id, callback) {
 }
 
 function playSegment(id) {
-    var url = getSegmentUrl(id);
+    console.log("Playing Segment " + id);
     app.currentSegment = id;
+    var url = getSegmentUrl(id);
     player.src = app.cache[url];
-    player.load();
+    //player.load();
     player.play();
 }
 
+function isLastSegment(){
+    if(app.currentSegment <= app.playlists[app.currentPlaylist].segments.length - 1){
+        return false;
+    }
+    return true;
+}
+
+player.onended = function() {
+    if(!isLastSegment()){
+        playSegment(app.currentSegment + 1);
+    }
+};
+
+player.onplay = function() {
+    if(!isLastSegment()){
+        preloadSegment(app.currentSegment + 1, false);
+    }
+};
+
 select_playlist.on('change', function () {
-    playPlaylist(this.value);
+    preloadSegment(id + 1, true);
 });
 
 select_segment.on('change', function () {
@@ -197,6 +220,9 @@ select_segment.on('change', function () {
 button_load.click(function () {
     loadPlaylist(playlist_master.val(), parseMaster);
 });
+
+
+
 //})
 //();
 
