@@ -170,9 +170,10 @@ function preloadSegment(id, forceplay) {
             var bloburl = URL.createObjectURL(Blob);
             app.cache[url] = bloburl;
             if(player.ended || forceplay){
-                console.log("I was forced to play");
                 playSegment(id);
             }
+        }else{
+            console.log("Something went wrong");
         }
     }
     req.onerror = function () {
@@ -183,11 +184,15 @@ function preloadSegment(id, forceplay) {
 
 function playSegment(id) {
     console.log("Playing Segment " + id);
-    app.currentSegment = id;
     var url = getSegmentUrl(id);
-    player.src = app.cache[url];
-    //player.load();
-    player.play();
+    if(app.cache[url]){
+        app.currentSegment = id;
+        player.src = app.cache[url];
+        //player.load();
+        player.play();
+    }else{
+        console.log("I would love to play your segment, but it's not downloaded yet");
+    }
 }
 
 function isLastSegment(){
