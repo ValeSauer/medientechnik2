@@ -1,3 +1,37 @@
 body{
     padding-top: 30px;
 }
+
+.segment{
+    position: relative;
+    float: left;
+    width: 160px;
+    height: 90px;
+    cursor: pointer;
+    border: 1px solid #eeeeec;
+}
+
+.segment:hover{
+    border: 1px solid #000000;
+}
+
+.segment_caption{
+    position: absolute;
+    font-size: 10px;
+    color: #000000;
+    z-index: 99;
+    bottom: 0px;
+    left: 0px;
+    width: 158px;
+    padding: 3px;
+    background-color:rgba(255, 255, 255, 0.5);
+}
+
+#tempvideo{
+    display: none;
+}
+
+.ajax_loader{
+    margin-top: 20px;
+    margin-left: 50px;
+}

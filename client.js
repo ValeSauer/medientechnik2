@@ -16,6 +16,12 @@ var playlist_master = $("#playlist_master");
 var select_playlist = $("#playlists");
 var select_segment = $("#segments");
 var player = $("#player")[0];
+var tempvideo = $("#tempvideo")[0];
+tempvideo.defaultMuted = true;
+
+ajax_loader = document.createElement("img");
+ajax_loader.setAttribute("src", "ajax-loader.gif");
+ajax_loader.setAttribute("class", "ajax_loader");
 
 /**
  * Parse a master playlist
@@ -85,7 +91,7 @@ function parseVariant(url, lines) {
                     }
                     app.playlists[i].segments.push(segment);
                     if (i == 0) {
-                        $("#segments").append("<option value='" + currentTime + "'>" + line + " | " + "Duration: " + parseFloat(duration) + "</option>");
+                        $("#segments").append("<div onclick='playSegment(" + app.playlists[i].segments.length + ")' class='segment' data-time='" + currentTime + "' data-url='" + segment.url +"' id='segment_" + app.playlists[i].segments.length + "'><div class='segment_caption'>" + line + "<br><small>Duration: " + parseFloat(duration) + " s</small></div></div>");
                     }
                     if(app.currentSegment === null && app.currentPlaylist === null){
                         app.currentPlaylist = 0;
@@ -141,8 +147,8 @@ function playPlaylist(id) {
 }
 
 function setCurrentTime(time) {
-    player[0].currentTime = time;
-    player[0].play();
+    player.currentTime = time;
+    player.play();
 }
 
 function getSegmentUrl(id){
@@ -157,10 +163,8 @@ function getSegmentUrl(id){
 
 function preloadSegment(id, forceplay) {
     console.log("Preloading Segment " + id);
+    $("#segment_" + id).append(ajax_loader);
     var url = getSegmentUrl(id);
-    if (app.cache[url]) {
-        callback(app.cache[url]);
-    }
     var req = new XMLHttpRequest();
     req.open('GET', url, true);
     req.responseType = 'blob';
@@ -169,6 +173,7 @@ function preloadSegment(id, forceplay) {
             var Blob = this.response;
             var bloburl = URL.createObjectURL(Blob);
             app.cache[url] = bloburl;
+            getPreview(id);
             if(player.ended || forceplay){
                 playSegment(id);
             }
@@ -180,6 +185,29 @@ function preloadSegment(id, forceplay) {
         // Error
     }
     req.send();
+}
+
+function getPreview(id){
+    var url = getSegmentUrl(id);
+    var canvas = document.createElement('canvas');
+    var context = canvas.getContext('2d');
+
+    canvas.width = 160;
+    canvas.height = 90;
+
+    tempvideo.src = app.cache[url];
+    tempvideo.load();
+    tempvideo.play();
+
+    tempvideo.onplay = function(){
+        setTimeout(function () {
+            context.fillRect(0, 0, 160, 90);
+            context.drawImage(tempvideo, 0, 0, 160, 90);
+            $('#segment_' + id).css("background-image", "url('" + canvas.toDataURL() + "'");
+            $("#segment_" + id + " > .ajax_loader").remove();
+            preloadSegment(id + 1, false);
+        }, 1000);
+    }
 }
 
 function playSegment(id) {
@@ -205,12 +233,6 @@ function isLastSegment(){
 player.onended = function() {
     if(!isLastSegment()){
         playSegment(app.currentSegment + 1);
-    }
-};
-
-player.onplay = function() {
-    if(!isLastSegment()){
-        preloadSegment(app.currentSegment + 1, false);
     }
 };
 

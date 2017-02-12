@@ -15,15 +15,13 @@
         <div class="form-horizontal">
             <div class="form-group">
                 <label for="playlist_master" class="col-md-2 control-label">Stream-URL:</label>
-                <div class="col-md-10">
+                <div class="col-md-8">
                     <input type="text" class="form-control" id="playlist_master" placeholder="URL to m3u8 Playlist"
                            value="http://files.sauer-medientechnik.de/gudauri/gudauri.m3u8"/>
                 </div>
-            </div>
 
-            <div class="form-group">
-                <div class=" col-sm-12">
-                    <button id="button_load" class="btn btn-primary">Load</button>
+                <div class=" col-md-2">
+                    <button id="button_load" class="btn btn-primary btn-block">Load</button>
                 </div>
             </div>
 
@@ -34,22 +32,24 @@
                 </div>
             </div>
 
-            <div class="form-group">
-                <label for="segments" class="col-md-2 control-label">Segment</label>
-                <div class="col-md-10">
-                    <select class="form-control" id="segments"></select>
-                </div>
-            </div>
-
         </div>
 
     </div>
 
     <div class="row">
+        <div class="col-md-12 text-center">
         <video id="player" width="640" height="360" src="" type="application/vnd.apple.mpegURL"
                controls>
         </video>
+        </div>
     </div>
+
+    <div class="row">
+        <div class="col-md-12" id="segments">
+        </div>
+    </div>
+
+    <video id="tempvideo" class="tempvideo" width="160" height="90" src="" type="application/vnd.apple.mpegURL"></video>
 
 </div>
 
