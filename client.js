@@ -246,6 +246,7 @@ function playSegment(id) {
         $(".redborder").removeClass("redborder");
         $("#segment_" + id).addClass("redborder");
     } else {
+
         console.log("I would love to play your segment, but it's not downloaded yet");
     }
 }
