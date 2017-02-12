@@ -162,11 +162,6 @@ function playPlaylist(id) {
     preloadSegment(id, true);
 }
 
-function setCurrentTime(time) {
-    player.currentTime = time;
-    player.play();
-}
-
 function getSegmentUrl(id) {
     if (!app.playlists[app.currentPlaylist]) {
         console.log("Playlist does not exist");
@@ -179,8 +174,7 @@ function getSegmentUrl(id) {
 
 function preloadSegment(id, forceplay) {
     app.currentPreload = id;
-    var url = getSegmentUrl(id);
-    if (app.cache[url]) {
+    if (app.cache[id]) {
         if (player.ended || forceplay) {
             playSegment(id);
         }
@@ -189,13 +183,13 @@ function preloadSegment(id, forceplay) {
     }
     $("#segment_" + id).append(ajax_loader);
     var req = new XMLHttpRequest();
-    req.open('GET', url, true);
+    req.open('GET', getSegmentUrl(id), true);
     req.responseType = 'blob';
     req.onload = function () {
         if (this.status === 200) {
             var Blob = this.response;
             var bloburl = URL.createObjectURL(Blob);
-            app.cache[url] = bloburl;
+            app.cache[id] = bloburl;
             getPreview(id);
             $("#segment_" + id + " .bandwidth").html(formatBandwidth(app.playlists[app.currentPlaylist].bandwidth));
             if (player.ended || forceplay) {
@@ -212,14 +206,13 @@ function preloadSegment(id, forceplay) {
 }
 
 function getPreview(id) {
-    var url = getSegmentUrl(id);
     var canvas = document.createElement('canvas');
     var context = canvas.getContext('2d');
 
     canvas.width = 160;
     canvas.height = 90;
 
-    tempvideo.src = app.cache[url];
+    tempvideo.src = app.cache[id];
     tempvideo.load();
     tempvideo.play();
 
@@ -237,16 +230,14 @@ function getPreview(id) {
 }
 
 function playSegment(id) {
-    var url = getSegmentUrl(id);
-    if (app.cache[url]) {
+    if (app.cache[id]) {
         app.currentSegment = id;
-        player.src = app.cache[url];
+        player.src = app.cache[id];
         //player.load();
         player.play();
         $(".redborder").removeClass("redborder");
         $("#segment_" + id).addClass("redborder");
     } else {
-
         console.log("I would love to play your segment, but it's not downloaded yet");
     }
 }
