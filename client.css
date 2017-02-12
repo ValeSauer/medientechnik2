@@ -1,5 +1,5 @@
 body{
-    padding-top: 30px;
+    padding-top: 10px;
 }
 
 .segment{
@@ -8,11 +8,11 @@ body{
     width: 160px;
     height: 90px;
     cursor: pointer;
-    border: 1px solid #eeeeec;
+    border: 3px solid #eeeeec;
 }
 
 .segment:hover{
-    border: 1px solid #000000;
+    border: 3px solid #000000;
 }
 
 .segment_caption{
@@ -22,9 +22,13 @@ body{
     z-index: 99;
     bottom: 0px;
     left: 0px;
-    width: 158px;
+    width: 154px;
     padding: 3px;
     background-color:rgba(255, 255, 255, 0.5);
+}
+
+.redborder{
+    border: 3px solid #FF0000;
 }
 
 #tempvideo{
@@ -32,6 +36,6 @@ body{
 }
 
 .ajax_loader{
-    margin-top: 20px;
-    margin-left: 50px;
+    margin-top: 10px;
+    margin-left: 60px;
 }
